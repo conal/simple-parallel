@@ -1,4 +1,4 @@
--- Simple model for parallel evaluation.
+-- Simple model for parallel computation
 
 module Parallel where
 
@@ -6,6 +6,8 @@ open import Data.Bool renaming (Bool to 𝔹)
 open import Data.Nat
 open import Data.Fin
 open import Data.Vec
+open import Function using (id; _∘_)
+open import Relation.Binary.PropositionalEquality
 
 private variable m n o : ℕ
 
@@ -20,50 +22,34 @@ data Op : ℕ → Set where
   `not : Op 1
   `and `or : Op 2
 
-⟦_⟧ˢ : Op n → (𝔹* n → 𝔹)
-⟦ `ix i ⟧ˢ xs           = lookup xs i
-⟦ `not  ⟧ˢ (x ∷ [])     = not x
-⟦ `and  ⟧ˢ (x ∷ y ∷ []) = x ∧ y
-⟦ `or   ⟧ˢ (x ∷ y ∷ []) = x ∨ y
+postulate  -- exercise
+  ⟦_⟧ᵒ : Op n → (𝔹* n → 𝔹)
 
--- One parallel step: operations in parallel, sharing an input vector.
+-- Parallel composition of operations sharing an input vector.
 infix 0 _↠_
 _↠_ :  ℕ → ℕ → Set
 m ↠ n = Vec (Op m) n
 
-⟦_⟧₁ : (m ↠ n) → (𝔹* m → 𝔹* n)
-⟦ ops ⟧₁ xs = map (λ op → ⟦ op ⟧ˢ xs) ops
+postulate   -- exercise
+  ⟦_⟧₁ : (m ↠ n) → (𝔹* m → 𝔹* n)
 
-id′ : n ↠ n
-id′ = tabulate `ix
-
-not′ : 1 ↠ 1
-not′ = `not ∷ []
-
-and′ or′ : 2 ↠ 1
-and′ = `and ∷ []
-or′  = `or  ∷ []
-
-infix 0 _⇨_
+-- Sequential composition of parallel compositions
+infix  0 _⇨_
 infixr 5 _∷_
 data _⇨_ :  ℕ → ℕ → Set where
   [] : n ⇨ n
   _∷_ : (m ↠ n) → (n ⇨ o) → (m ⇨ o)
 
-id″ : n ⇨ n
-id″ = tabulate `ix ∷ []
+postulate  -- exercise
+  ⟦_⟧ : (m ⇨ n) → (𝔹* m → 𝔹* n)
 
-op : Op n → (n ⇨ 1)
-op o = (o ∷ []) ∷ []
+private variable f g : m ⇨ n
 
-not″ : 1 ⇨ 1
-not″ = op `not
+infixr 9 _∘′_
+postulate   -- exercise
 
-and″ or″ : 2 ⇨ 1
-and″ = op `and
-or″  = op `or
+  id′ : n ⇨ n
+  _∘′_ : (n ⇨ o) → (m ⇨ n) → (m ⇨ o)
 
-open import Function using (id; _∘_)
-open import Relation.Binary.PropositionalEquality
-
--- ⟦id′⟧ : ⟦ id′ ⟧ ≗ id
+  ⟦id⟧ : ⟦ id′ {n} ⟧ ≗ id
+  ⟦∘⟧  : ⟦ g ∘′ f ⟧  ≗ ⟦ g ⟧ ∘ ⟦ f ⟧
