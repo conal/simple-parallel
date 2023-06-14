@@ -68,3 +68,6 @@ has-work : (𝔹* m → 𝔹* n) → ℕ → Set
 has-work f d = ∃ λ f′ → ⟦ f′ ⟧ ≗ f × work f′ ≡ d
 
 -- Exercise: prove depth and work for a monoidal reduction (e.g., ∧).
+
+
+-- TODO: How to define fork/?
